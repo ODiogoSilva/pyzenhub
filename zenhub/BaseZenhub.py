@@ -9,8 +9,9 @@ NotSet = _NotSetType()
 
 
 class BaseZenhub:
-    def __init__(self, requester, headers, attributes):
+    def __init__(self, requester, headers, attributes, repositoryId):
         self._requester = requester
+        self._repositoryId = repositoryId
 
         self._initAttributes()
         self._storeAndUseAttributes(headers, attributes)
@@ -18,4 +19,4 @@ class BaseZenhub:
     def _storeAndUseAttributes(self, headers, attributes):
         self._headers = headers
         self._rawAttributes = attributes
-        self._useAtttributes(attributes)
+        self._useAttributes(attributes)
