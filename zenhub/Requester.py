@@ -1,7 +1,7 @@
 import json
 
 import requests
-from urllib.parse import urlparse, parse_qsl, urlencode, urlunsplit
+from urllib.parse import urlparse, urlencode, urlunsplit, urlsplit, parse_qs
 
 from . import Constants
 
@@ -28,14 +28,15 @@ class HttpsRequestSession:
 
         self.verb = None
         self.url = None
-        self.input = None
+        self.json = None
         self.headers = None
 
         self.session = requests.Session()
 
-    def request(self, verb, url, headers):
+    def request(self, verb, url, json, headers):
         self.verb = verb
         self.url = url
+        self.json = json
         self.headers = headers
 
     def getResponse(self):
@@ -43,7 +44,8 @@ class HttpsRequestSession:
         url = f"{self.protocol}://{self.host}:{self.port}{self.url}"
         r = verb(
             url,
-            headers=self.headers
+            headers=self.headers,
+            json=self.json
         )
         return RequestsResponse(r)
 
@@ -59,9 +61,9 @@ class Requester:
         self.__port = parsedUrl.port
         self.__prefix = parsedUrl.path
 
-    def requestJsonAndCheck(self, verb, requestUrl, parameters=None, headers=None):
+    def requestJsonAndCheck(self, verb, requestUrl, parameters=None, json=None, headers=None):
         # TODO: Make a request and check the status of the response.
-        return self.__checkResponse(*self.__makeRequest(verb, requestUrl, parameters, headers))
+        return self.__checkResponse(*self.__makeRequest(verb, requestUrl, parameters, json, headers))
 
     def __checkResponse(self, status, headers, response):
         # TODO: actually handle status to create exceptions here.
@@ -79,7 +81,7 @@ class Requester:
             except ValueError:
                 return {"data": data}
 
-    def __makeRequest(self, verb, requestUrl, parameters=None, headers=None):
+    def __makeRequest(self, verb, requestUrl, parameters=None, json=None, headers=None):
         assert verb in Constants.VALID_HTTP_VERBS
         parameters = parameters if parameters is not None else dict()
         headers = headers if headers is not None else dict()
@@ -87,7 +89,7 @@ class Requester:
         self.__injectRequestHeaders(headers)
         requestUrl = self.__buildRequestUrl(requestUrl, parameters)
 
-        return self.__getResponse(verb, requestUrl, headers)
+        return self.__getResponse(verb, requestUrl, json, headers)
 
     def __injectRequestHeaders(self, headers):
         self.__authenticate(headers)
@@ -108,12 +110,19 @@ class Requester:
 
     @staticmethod
     def __addParametersToUrl(url, parameters):
-        # TODO
-        return url
+        scheme, netloc, path, query_string, fragment = urlsplit(url)
+        queryParams = parse_qs(query_string)
 
-    def __getResponse(self, verb, url, headers):
+        for parameterName, parameterValue in parameters.items():
+            queryParams[parameterName] = [parameterValue]
+
+        new_query_string = urlencode(queryParams, doseq=True)
+
+        return urlunsplit((scheme, netloc, path, new_query_string, fragment))
+
+    def __getResponse(self, verb, url, json, headers):
         connection = self.__getConnectionHandle()
-        connection.request(verb, url, headers)
+        connection.request(verb, url, json, headers)
         response = connection.getResponse()
 
         status = response.status
