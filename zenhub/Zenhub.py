@@ -2,6 +2,7 @@ from zenhub.Requester import Requester
 from . import (
     Epic,
     Issue,
+    Workspaces,
     Constants
 )
 
@@ -35,8 +36,12 @@ class Zenhub:
 
     def get_workspaces(self):
         url = f"/p2/repositories/{self._repositoryId}/workspaces"
-        [_, responseJson] = self.__requester.requestJsonAndCheck('GET', url)
-        return responseJson
+        [responseHeaders, workspaces] = self.__requester.requestJsonAndCheck('GET', url)
+        return [
+            Workspaces.Workspaces(
+                self.__requester, responseHeaders, workspace, self._repositoryId
+            ) for workspace in workspaces
+        ]
 
     def get_board(self, workspaceId):
         url = f"/p2/workspaces/{workspaceId}/repositories/{self._repositoryId}/board"
