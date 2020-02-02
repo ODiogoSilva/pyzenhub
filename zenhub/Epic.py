@@ -19,7 +19,7 @@ class Epic(zenhub.BaseZenhub.BaseZenhub):
         self._repoId = zenhub.BaseZenhub.NotSet
         self._issueUrl = zenhub.BaseZenhub.NotSet
 
-    def _useAtttributes(self, attributes):
+    def _useAttributes(self, attributes):
         if "issue_number" in attributes:
             self._issueNumber = attributes["issue_number"]
 
