@@ -32,3 +32,18 @@ class Zenhub:
         url = f"/p1/repositories/{self._repositoryId}/issues/{issue_number}/events"
         [_, responseJson] = self.__requester.requestJsonAndCheck('GET', url)
         return responseJson
+
+    def get_workspaces(self):
+        url = f"/p2/repositories/{self._repositoryId}/workspaces"
+        [_, responseJson] = self.__requester.requestJsonAndCheck('GET', url)
+        return responseJson
+
+    def get_board(self, workspaceId):
+        url = f"/p2/workspaces/{workspaceId}/repositories/{self._repositoryId}/board"
+        [_, responseJson] = self.__requester.requestJsonAndCheck('GET', url)
+        return responseJson
+
+    def get_oldest_board(self):
+        url = f"/p1/repositories/{self._repositoryId}/board"
+        [_, responseJson] = self.__requester.requestJsonAndCheck('GET', url)
+        return responseJson
